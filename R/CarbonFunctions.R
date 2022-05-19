@@ -1,6 +1,12 @@
-# Calculating biomass and carbon from live and dead wood and soil carbon
-# Alana Clason, Ingrid Farnell
-#January 15, 2021
+# This script contains functions to calculate carbon from tree data and soils                     
+#                                                                                                 
+# From Clason, Farnell and Lilles, 2022. Carbon 5 to 60 years after fire: Planting trees does not 
+# compensate for losses in dead wood stores                                       
+# 
+# Script Authors: Ingrid Farnell and Alana Clason
+# last modified January 15, 2021    
+#
+##################################################################################################
 
 #################### Mineral soil carbon: #############################
 Min_SOC <- function(Soc, BD, depth, CoarseFrags){

@@ -194,23 +194,39 @@ for (ix in 1:length(xmlList)) { #start loop over xml files
 
 ##############################################################################
 ##### read in SORTIE Outputs as csvs of extracted plots from SORTIE extraction
-#of full plots and then clip to get quick results on 20x20
+#of full plots and then clip to get results on 20x20
 ##############################################################################
+sortie_out_path <- "D:/SORTIEruns/FireCarbon/extracted/"
+Run_type <- "OldGrowth"
+#Checking files
+dt_table <- data.table()
+plotID250 <- paste0(c(paste0("FR0",seq(1,9,by=1)),paste0("FR",seq(10,75,by=1))))
+##Checking that all files are there
+for(pl in 1:length(plotID250)){
+  PlID <- plotID250[pl]
+  FireYr <- FR_treatments[ID==plotID250[pl],TimeSinceFire]
+  Yrs2ext <- c(seq(0,250,by=1)-FireYr)
+  Yrs2ext <- Yrs2ext[Yrs2ext>=0]
+  for(i in 1:length(Yrs2ext)){
+    if(file.exists(paste0(sortie_out_path,"ext_SBS-01-",plotID250[pl],"Inits250_det_",Yrs2ext[i]))==TRUE){
+      next
+    }else{
+      print(paste0(sortie_out_path,"ext_SBS-01-",plotID250[pl],"Inits250_det_",Yrs2ext[i]," does not exist"))
+    }
+  }
+}
+
 if(Run_type=="OldGrowth"){
   ###### 250 year runs ########
   dt_table <- data.table()
-  whichID250 <- grep("Inits250_det_0",list.files("E:/SORTIE_runs/SortieExtract/"), value=TRUE) #list all the files with 250 in it
-  Plot250 <- strsplit(whichID250, "Ext_SBS-01-")
-  PlotID250 <- lapply(Plot250,function(x)strsplit(x,"Inits250_det_0"))
-  #This is hideous:
-  plotID250 <- sapply(sapply(PlotID250,function(x) x[2]),function(x) x[1])
+  plotID250 <- paste0(c(paste0("FR0",seq(1,9,by=1)),paste0("FR",seq(10,75,by=1))))
   for(pl in 1:length(plotID250)){
     PlID <- plotID250[pl]
     FireYr <- FR_treatments[ID==plotID250[pl],TimeSinceFire]
-    Yrs2ext <- c(0,1,seq(10,250,by=10)-FireYr)
+    Yrs2ext <- c(seq(0,250,by=10)-FireYr) #extract every 10 years
     Yrs2ext <- Yrs2ext[Yrs2ext>=0]
     for(i in 1:length(Yrs2ext)){
-      dt <- fread(paste0("E:/SORTIE_runs/SortieExtract/Ext_SBS-01-",plotID250[pl],"Inits250_det_",Yrs2ext[i]), 
+      dt <- fread(paste0(sortie_out_path,"ext_SBS-01-",plotID250[pl],"Inits250_det_",Yrs2ext[i]), 
                   sep="\t", header=T,na.strings = "--", skip=1)
       dt[,':='(timestep = Yrs2ext[i],plotID = PlID)]
       dt <- dt[X >50 & X <150 & Y>50 & Y <150] #clip 1ha in the middle of the stand
@@ -218,8 +234,6 @@ if(Run_type=="OldGrowth"){
     }
     print(paste("Plot",PlID,"done"))
   }
-  
-  
   dt_table <- dt_table[,SO_sp:=ifelse(Species=="Western_Larch", "Lw", #grow larch as spruce
                                       ifelse(Species=="Douglas_Fir","Fd", #grow Doug fir as spruce
                                              ifelse(Species=="Subalpine_Fir","Bl",
@@ -236,7 +250,7 @@ if(Run_type=="OldGrowth"){
   Trees_SO <- dt_table[!is.na(DBH) & Height >1.3|!is.na(DBH) & is.na(Height)]
   Trees_SO[,Tree_class := ifelse(Tree_class=="L",2,4)] #will have to change when have dead trees initating
   
-  g <- vector() #re-run with dead trees
+  g <- vector() #rJust live trees
   for(i in 1:nrow(Trees_SO)){
     g[i] <- TreeCarbonFN(Species = Trees_SO[i,SO_sp], DBH= Trees_SO[i,DBH], 
                          HT= Trees_SO[i,Height], Tree_class=Trees_SO[i,Tree_class])
@@ -245,7 +259,7 @@ if(Run_type=="OldGrowth"){
   Trees_SO[,CarbonPerHa := g/1000]
   #can't calculate dead carbon here because no heights - need to use the dbh only equations, which aren't in our function yet
   #just write out live trees
-  write.csv(Trees_SO[Tree_class==2],"E:/SORTIE_runs/SortieExtract/SE_Trees_SO_250.csv")
+  write.csv(Trees_SO[Tree_class==2],"D:/SORTIEruns/SE_Trees_SO_250.csv")
 
 }else{
   ###### 100 year runs ########
@@ -281,7 +295,7 @@ if(Run_type=="OldGrowth"){
   Trees_SO <- dt_table[!is.na(DBH) & Height >1.3|!is.na(DBH) & is.na(Height)]
   Trees_SO[,Tree_class := ifelse(Tree_class=="L",2,4)] #will have to change when have dead trees initating
   
-  g <- vector() #re-run with dead trees
+  g <- vector() #just live trees
   for(i in 1:nrow(Trees_SO)){
     g[i] <- TreeCarbonFN(Species = Trees_SO[i,SO_sp], DBH= Trees_SO[i,DBH], 
                          HT= Trees_SO[i,Height], Tree_class=Trees_SO[i,Tree_class])
