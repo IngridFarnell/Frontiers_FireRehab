@@ -2,11 +2,8 @@
 library(data.table)
 library(xml2)
 library(stringr)
-
-source("../r-SORTIE/ParseXML.R")
-source("../r-SORTIE/Functions.R")
-source("../r-SORTIE/ReplaceInfo.R")
-source("../r-SORTIE/SORTIE-HelperFunctions.R")
+library(rsortie)
+#source("../r-SORTIE/SORTIE-HelperFunctions.R")
 source("./R/CarbonFunctions.R")
 source("./R/DensityFunctions.R")
 
